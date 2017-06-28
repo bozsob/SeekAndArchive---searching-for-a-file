@@ -10,6 +10,7 @@ namespace SeekAndArchive
     class Program
     {
         static List<FileInfo> foundFiles;
+        static List<FileSystemWatcher> watchers;
 
         static void RecursiveSearch
             (List<FileInfo> foundFiles, string fileName, DirectoryInfo currentDirectory)
@@ -29,8 +30,21 @@ namespace SeekAndArchive
             }
         }
 
+        
+            // for file watching we need a method to handle the change events
+            static void WatcherChanged(object sender, FileSystemEventArgs e)
+        {
+            if (e.ChangeType == WatcherChangeTypes.Changed)
+            {
+                Console.WriteLine("{0} has been changed.", e.FullPath);
+            }
+        }
+
+
+
         static void Main(string[] args)
         {
+
             string fileName = args[0];
             string directoryName = args[1];
 
@@ -53,7 +67,20 @@ namespace SeekAndArchive
             {
                 Console.WriteLine("{0}", file.FullName);
             }
-            Console.ReadKey();
+            Console.ReadLine();
+
+            // File WATCHING
+            watchers = new List<FileSystemWatcher>();
+
+            foreach (FileInfo file in foundFiles)
+            {
+                FileSystemWatcher newWatcher = new FileSystemWatcher(file.DirectoryName, file.Name);
+                newWatcher.Changed += new FileSystemEventHandler(WatcherChanged);
+                newWatcher.EnableRaisingEvents = true;
+                watchers.Add(newWatcher);
+            }
+
+
         }
     }
 }
